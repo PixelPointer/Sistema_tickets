@@ -1,0 +1,162 @@
+:root {
+    --primary-green: #066931;
+    --text-dark: #1a202c;
+    --text-light: #718096;
+    --border-color: #cbd5e0;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(rgba(240, 244, 248, 0.9), rgba(240, 244, 248, 0.9)), 
+                url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    padding: 20px 40px;
+    color: var(--primary-green);
+    font-weight: bold;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.register-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 650px;
+    padding: 40px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+h2 {
+    margin: 0 0 10px 0;
+    color: var(--text-dark);
+    font-size: 1.8rem;
+}
+
+.subtitle {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.full-width {
+    grid-column: span 2;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+input, textarea {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border 0.2s;
+}
+
+input:focus {
+    border-color: var(--primary-green);
+}
+
+textarea {
+    resize: none;
+    height: 80px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.btn-submit {
+    width: 100%;
+    background-color: var(--primary-green);
+    color: white;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn-submit:hover {
+    background-color: #045226;
+}
+
+.login-link {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.login-link a {
+    color: #2b6cb0;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+footer {
+    padding: 20px;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-align: left;
+    margin-left: 20px;
+}
+
+@media (max-width: 600px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    .full-width {
+        grid-column: span 1;
+    }
+}
