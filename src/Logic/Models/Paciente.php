@@ -51,4 +51,26 @@ class Paciente {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public static function buscarPorIdPersona($id_persona) {
+        $conn = Database::getConnection();
+        $query = "SELECT * FROM paciente WHERE id_persona = :id_persona";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(":id_persona", $id_persona);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public static function buscarPorIdUsuario($id_usuario) {
+        $conn = Database::getConnection();
+        $query = "SELECT p.*, per.nombre, per.apellido, per.documento, per.telefono, per.direccion, per.fecha_nacimiento, per.email, u.nombre_usuario as nombre_usuario
+                  FROM usuario u
+                  INNER JOIN persona per ON u.id_persona = per.id_persona
+                  INNER JOIN paciente p ON p.id_persona = per.id_persona
+                  WHERE u.id_usuario = :id_usuario";
+        $stmt = $conn->prepare($query);
+        $stmt->bindParam(":id_usuario", $id_usuario);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

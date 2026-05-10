@@ -12,8 +12,7 @@ body, html {
     padding: 0;
     height: 100%;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(rgba(240, 244, 248, 0.8), rgba(240, 244, 248, 0.8)), 
-                url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+    background: linear-gradient(rgba(240, 244, 248, 0.8), rgba(240, 244, 248, 0.8));
     background-size: cover;
     background-position: center;
     display: flex;
@@ -170,4 +169,33 @@ footer {
     padding: 20px 40px;
     font-size: 0.75rem;
     color: var(--text-light);
+}
+
+.password-wrapper {
+    position: relative;
+    flex: 1;
+}
+.password-wrapper input {
+    padding-right: 45px !important;
+    box-sizing: border-box;
+}
+.toggle-password {
+    position: absolute;
+    right: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #718096;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    line-height: 0;
+}
+.toggle-password:hover { color: #066931; }
+.toggle-password svg {
+    display: block;
 }

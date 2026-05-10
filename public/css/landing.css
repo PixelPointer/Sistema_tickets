@@ -7,8 +7,7 @@ body, html {
 }
 
 .background-container {
-    background: linear-gradient(rgba(240, 248, 255, 0.85), rgba(240, 248, 255, 0.85)), 
-                url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+    background: linear-gradient(rgba(240, 248, 255, 0.85), rgba(240, 248, 255, 0.85));
     background-size: cover;
     background-position: center;
     height: 100vh;

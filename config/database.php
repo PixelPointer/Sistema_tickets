@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/La_Paz');
 
 class Database {
     private static $host = "localhost";
