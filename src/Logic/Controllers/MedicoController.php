@@ -140,6 +140,10 @@ class MedicoController {
 
     public function calcularMM1() {
         if (!$this->id_especialidad) return null;
-        return Ticket::calcularMM1($this->id_especialidad);
+        try {
+            return Ticket::calcularMM1($this->id_especialidad);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }
