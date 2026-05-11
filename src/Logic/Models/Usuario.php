@@ -69,6 +69,36 @@ class Usuario {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public static function buscarUsuarios($search, $limit = 0, $offset = 0) {
+        $conn = Database::getConnection();
+        $query = "SELECT u.id_usuario, u.nombre_usuario, u.estado, u.id_rol, 
+                  p.nombre, p.apellido, p.documento, p.telefono,
+                  r.nombre_rol
+                  FROM usuario u 
+                  INNER JOIN persona p ON u.id_persona = p.id_persona
+                  INNER JOIN rol r ON u.id_rol = r.id_rol
+                  WHERE (p.nombre LIKE ? OR p.apellido LIKE ? OR u.nombre_usuario LIKE ?)
+                  ORDER BY u.id_usuario DESC";
+        if ($limit > 0) {
+            $query .= " LIMIT " . intval($limit) . " OFFSET " . intval($offset);
+        }
+        $stmt = $conn->prepare($query);
+        $searchTerm = '%' . $search . '%';
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function contarUsuariosBusqueda($search) {
+        $conn = Database::getConnection();
+        $query = "SELECT COUNT(*) as total FROM usuario u 
+                  INNER JOIN persona p ON u.id_persona = p.id_persona
+                  WHERE p.nombre LIKE ? OR p.apellido LIKE ? OR u.nombre_usuario LIKE ?";
+        $stmt = $conn->prepare($query);
+        $searchTerm = '%' . $search . '%';
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    }
+
     public static function listarTodos($limit = 0, $offset = 0) {
         $conn = Database::getConnection();
         $query = "SELECT u.id_usuario, u.nombre_usuario, u.estado, u.id_rol, 

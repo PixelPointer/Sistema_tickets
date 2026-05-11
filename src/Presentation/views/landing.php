@@ -23,6 +23,13 @@ $pageTitle = "Q-Line - Gestión de Salud";
                 <a href="?route=register" class="btn btn-primary">Crear Cuenta</a>
                 <a href="?route=login" class="btn btn-outline">Iniciar Sesión</a>
             </div>
+
+            <div class="button-group" style="margin-top: 15px;">
+                <a href="?route=monitor" class="btn btn-monitor" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1px solid #334155;color:#94a3b8;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:0.9rem;transition:all 0.2s;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+                    Monitor Sala de Espera
+                </a>
+            </div>
     </main>
 
     <footer>

@@ -19,10 +19,10 @@ if (!$ticketInfo) {
 
 $fechaFormateada = date('M d, Y', strtotime($ticketInfo['fecha_creacion']));
 $horaFormateada = date('h:i A', strtotime($ticketInfo['fecha_creacion']));
-$prioridadTexto = $ticketInfo['prioridad'] === 'Verde' ? 'ESTÁNDAR' : ($ticketInfo['prioridad'] === 'Amarillo' ? 'URGENTE' : 'EMERGENCIA');
-$prioridadBadgeClass = $ticketInfo['prioridad'] === 'Verde' ? '#e6fffa' : ($ticketInfo['prioridad'] === 'Amarillo' ? '#fef3c7' : '#fee2e2');
-$prioridadBadgeText = $ticketInfo['prioridad'] === 'Verde' ? '#2c7a7b' : ($ticketInfo['prioridad'] === 'Amarillo' ? '#92400e' : '#991b1b');
-$prioridadBadgeBorder = $ticketInfo['prioridad'] === 'Verde' ? '#b2f5ea' : ($ticketInfo['prioridad'] === 'Amarillo' ? '#fde68a' : '#fecaca');
+$prioridadTexto = $ticketInfo['prioridad'] === 'Verde' ? 'ESTÁNDAR' : 'URGENTE';
+$prioridadBadgeClass = $ticketInfo['prioridad'] === 'Verde' ? '#e6fffa' : '#fef3c7';
+$prioridadBadgeText = $ticketInfo['prioridad'] === 'Verde' ? '#2c7a7b' : '#92400e';
+$prioridadBadgeBorder = $ticketInfo['prioridad'] === 'Verde' ? '#b2f5ea' : '#fde68a';
 ?>
 <style>
     :root {

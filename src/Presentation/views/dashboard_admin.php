@@ -21,8 +21,14 @@ $porPagina = 20;
 $offset = ($pagina - 1) * $porPagina;
 
 $userController = new UserController();
-$totalUsuarios = $userController->contarUsuarios();
-$usuarios = $userController->listUsers($porPagina, $offset);
+$searchUsuarios = trim($_GET['search_usuarios'] ?? '');
+if (!empty($searchUsuarios)) {
+    $totalUsuarios = $userController->contarUsuariosBusqueda($searchUsuarios);
+    $usuarios = $userController->buscarUsuarios($searchUsuarios, $porPagina, $offset);
+} else {
+    $totalUsuarios = $userController->contarUsuarios();
+    $usuarios = $userController->listUsers($porPagina, $offset);
+}
 $roles = $userController->listRoles();
 
 $espCtrl = new EspecialidadController();
@@ -163,6 +169,15 @@ $pageTitle = "Dashboard Administrador - Q-Line";
             
             <?php elseif ($activeSection === 'usuarios'): ?>
                 <h2 class="section-title">Gestión de Usuarios</h2>
+                <form method="GET" style="margin-bottom:15px;display:flex;gap:10px;align-items:center;">
+                    <input type="hidden" name="route" value="dashboard_admin">
+                    <input type="hidden" name="view" value="usuarios">
+                    <input type="text" name="search_usuarios" placeholder="Buscar por nombre, apellido o email..." value="<?= htmlspecialchars($searchUsuarios) ?>" style="flex:1;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;">
+                    <button type="submit" style="padding:10px 20px;background:#066931;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Buscar</button>
+                    <?php if (!empty($searchUsuarios)): ?>
+                        <a href="?route=dashboard_admin&view=usuarios" style="padding:10px 20px;background:#f0f0f0;color:#333;border-radius:8px;text-decoration:none;font-weight:600;">Limpiar</a>
+                    <?php endif; ?>
+                </form>
                 <table class="data-table">
                     <thead><tr><th>Nombre</th><th>Apellido</th><th>Usuario</th><th>Rol</th><th>Cambiar</th></tr></thead>
                     <tbody>
@@ -439,7 +454,7 @@ $pageTitle = "Dashboard Administrador - Q-Line";
                                 <td><?= htmlspecialchars($t['nombre_especialidad']) ?></td>
                                 <td>N° <?= htmlspecialchars($t['numero_consultorio']) ?></td>
                                 <td><span class="badge badge-<?= match($t['estado']) { 'Espera' => '3', 'Llamado' => '2', 'Atendido' => '1', default => '3' } ?>"><?= $t['estado'] ?></span></td>
-                                <td><span class="badge badge-<?= match($t['prioridad']) { 'Rojo' => '3', 'Amarillo' => '3', default => '1' } ?>"><?= $t['prioridad'] ?></span></td>
+                                <td><span class="badge badge-<?= $t['prioridad'] === 'Amarillo' ? '3' : '1' ?>"><?= $t['prioridad'] ?></span></td>
                                 <td><?= date('d/m/Y H:i', strtotime($t['fecha_creacion'])) ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -512,6 +527,17 @@ $pageTitle = "Dashboard Administrador - Q-Line";
         </h2>
         
         <?php if ($activeSection === 'usuarios'): ?>
+            <form method="GET" style="margin-bottom:15px;">
+                <input type="hidden" name="route" value="dashboard_admin">
+                <input type="hidden" name="view" value="usuarios">
+                <div style="display:flex;gap:8px;">
+                    <input type="text" name="search_usuarios" placeholder="Buscar usuarios..." value="<?= htmlspecialchars($searchUsuarios) ?>" class="mobile-input" style="flex:1;">
+                    <button type="submit" class="mobile-btn" style="flex:0;">Buscar</button>
+                </div>
+                <?php if (!empty($searchUsuarios)): ?>
+                    <a href="?route=dashboard_admin&view=usuarios" style="display:block;text-align:center;padding:8px;color:#718096;font-size:0.85rem;">Limpiar búsqueda</a>
+                <?php endif; ?>
+            </form>
             <?php foreach ($usuarios as $u): ?>
                 <div class="mobile-card">
                     <strong><?= htmlspecialchars($u['nombre'] . ' ' . $u['apellido']) ?></strong><br>

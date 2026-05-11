@@ -97,12 +97,7 @@ $especialidades = $ticketCtrl->listEspecialidades();
                         <div style="font-size:0.8rem;color:var(--text-muted);">Malestar o dolor moderado</div>
                         <input type="radio" name="prioridad" value="Amarillo" style="display:none;">
                     </label>
-                    <label style="flex:1;min-width:150px;padding:15px 20px;border:2px solid var(--border-color);border-radius:12px;cursor:pointer;text-align:center;transition:all 0.2s;" class="triage-option" data-value="Rojo">
-                        <div style="font-size:1.5rem;margin-bottom:5px;">🔴</div>
-                        <div style="font-weight:600;">Emergencia</div>
-                        <div style="font-size:0.8rem;color:var(--text-muted);">Dolor intenso o fiebre alta</div>
-                        <input type="radio" name="prioridad" value="Rojo" style="display:none;">
-                    </label>
+
                 </div>
             </div>
 

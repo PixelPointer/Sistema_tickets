@@ -93,6 +93,7 @@ class TicketController {
         $ticket->prioridad = $prioridad;
         $ticket->estado = 'Espera';
         $ticket->tiempo_estimado_espera = $tiempo_espera;
+        $ticket->motivo_consulta = $sintomas;
 
         if ($ticket->crear()) {
             $info = Ticket::obtenerPorId($ticket->id_ticket);

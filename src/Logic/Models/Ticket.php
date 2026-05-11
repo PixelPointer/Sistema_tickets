@@ -12,6 +12,7 @@ class Ticket {
     public $prioridad;
     public $estado;
     public $tiempo_estimado_espera;
+    public $motivo_consulta;
     public $fecha_creacion;
     public $hora_inicio_estimada;
     public $hora_fin_estimada;
@@ -22,8 +23,8 @@ class Ticket {
 
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
-                  (id_paciente, id_consultorio, codigo_ticket, prioridad, estado, tiempo_estimado_espera) 
-                  VALUES (:id_paciente, :id_consultorio, :codigo_ticket, :prioridad, :estado, :tiempo_estimado_espera)";
+                  (id_paciente, id_consultorio, codigo_ticket, prioridad, estado, tiempo_estimado_espera, motivo_consulta) 
+                  VALUES (:id_paciente, :id_consultorio, :codigo_ticket, :prioridad, :estado, :tiempo_estimado_espera, :motivo_consulta)";
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(":id_paciente", $this->id_paciente);
@@ -32,6 +33,7 @@ class Ticket {
         $stmt->bindParam(":prioridad", $this->prioridad);
         $stmt->bindParam(":estado", $this->estado);
         $stmt->bindParam(":tiempo_estimado_espera", $this->tiempo_estimado_espera);
+        $stmt->bindParam(":motivo_consulta", $this->motivo_consulta);
 
         if ($stmt->execute()) {
             $this->id_ticket = $this->conn->lastInsertId();
@@ -57,8 +59,10 @@ class Ticket {
             $abbr = substr($abbr, 0, 3);
         }
 
-        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket WHERE DATE(fecha_creacion) = CURDATE()");
-        $stmt->execute();
+        $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket t 
+                                INNER JOIN consultorio c ON t.id_consultorio = c.id_consultorio
+                                WHERE DATE(t.fecha_creacion) = CURDATE() AND c.id_especialidad = ?");
+        $stmt->execute([$id_especialidad]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $seq = str_pad($row['total'] + 1, 3, '0', STR_PAD_LEFT);
 
@@ -239,6 +243,53 @@ class Ticket {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("UPDATE ticket SET estado = ? WHERE id_ticket = ?");
         return $stmt->execute([$estado, $id_ticket]);
+    }
+
+    public static function listarMonitor() {
+        $conn = Database::getConnection();
+
+        $llamados = $conn->query("
+            SELECT t.codigo_ticket, c.numero_consultorio, c.piso, t.prioridad,
+                   t.hora_inicio_estimada, e.nombre_especialidad,
+                   TIMESTAMPDIFF(MINUTE, t.hora_inicio_estimada, CURTIME()) as minutos_llamado
+            FROM ticket t
+            INNER JOIN consultorio c ON t.id_consultorio = c.id_consultorio
+            INNER JOIN especialidad e ON c.id_especialidad = e.id_especialidad
+            WHERE t.estado = 'Llamado' AND DATE(t.fecha_creacion) = CURDATE()
+            ORDER BY t.hora_inicio_estimada ASC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $atendidos = $conn->query("
+            SELECT t.codigo_ticket, c.numero_consultorio, c.piso, t.prioridad,
+                   a.fecha_hora_atencion, e.nombre_especialidad
+            FROM atencion a
+            INNER JOIN ticket t ON a.id_ticket = t.id_ticket
+            INNER JOIN consultorio c ON t.id_consultorio = c.id_consultorio
+            INNER JOIN especialidad e ON c.id_especialidad = e.id_especialidad
+            WHERE a.fecha_hora_atencion >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)
+            ORDER BY a.fecha_hora_atencion DESC
+            LIMIT 15
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $espera = $conn->query("
+            SELECT e.nombre_especialidad, COUNT(*) as total
+            FROM ticket t
+            INNER JOIN consultorio c ON t.id_consultorio = c.id_consultorio
+            INNER JOIN especialidad e ON c.id_especialidad = e.id_especialidad
+            WHERE t.estado = 'Espera' AND DATE(t.fecha_creacion) = CURDATE()
+            GROUP BY e.nombre_especialidad
+            ORDER BY total DESC
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $total_espera = array_sum(array_column($espera, 'total'));
+
+        return [
+            'llamados' => $llamados,
+            'atendidos' => $atendidos,
+            'espera_por_especialidad' => $espera,
+            'total_espera' => $total_espera,
+            'timestamp' => date('H:i:s')
+        ];
     }
 
     public static function calcularMM1($id_especialidad) {

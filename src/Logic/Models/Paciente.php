@@ -73,4 +73,18 @@ class Paciente {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public static function buscarPacientes($search) {
+        $conn = Database::getConnection();
+        $query = "SELECT p.id_paciente, per.nombre, per.apellido, per.documento, per.telefono, per.fecha_nacimiento, per.email
+                  FROM paciente p
+                  INNER JOIN persona per ON p.id_persona = per.id_persona
+                  WHERE per.nombre LIKE ? OR per.apellido LIKE ? OR per.documento LIKE ?
+                  ORDER BY per.apellido, per.nombre
+                  LIMIT 20";
+        $stmt = $conn->prepare($query);
+        $searchTerm = '%' . $search . '%';
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -35,6 +35,11 @@ if ($activeSection === 'citas') {
     $citasProximas = $userCtrl->listarCitasPaciente($_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? 0);
 }
 
+$historialAtenciones = [];
+if ($activeSection === 'historial') {
+    $historialAtenciones = $userCtrl->listarHistorialAtenciones($_SESSION['id_usuario'] ?? $_SESSION['user_id'] ?? 0);
+}
+
 $pageTitle = "Dashboard Paciente - Q-Line";
 ?>
 
@@ -60,6 +65,10 @@ $pageTitle = "Dashboard Paciente - Q-Line";
             <a href="?route=dashboard_paciente&section=citas" class="menu-item <?= $activeSection === 'citas' ? 'active' : '' ?>">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 Mis Citas
+            </a>
+            <a href="?route=dashboard_paciente&section=historial" class="menu-item <?= $activeSection === 'historial' ? 'active' : '' ?>">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                Mi Historial
             </a>
             <a href="?route=dashboard_paciente&section=perfil" class="menu-item <?= $activeSection === 'perfil' ? 'active' : '' ?>">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -577,6 +586,66 @@ $pageTitle = "Dashboard Paciente - Q-Line";
                         </div>
                     <?php endif; ?>
                 </div>
+            <?php elseif ($activeSection === 'historial'): ?>
+                <style>
+                    .historial-container { max-width: 800px; margin: 0 auto; }
+                    .historial-title { font-size: 1.5rem; color: #2d3748; margin-bottom: 5px; }
+                    .historial-subtitle { color: #718096; margin-bottom: 25px; }
+                    .historial-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; transition: all 0.2s; }
+                    .historial-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+                    .historial-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+                    .historial-date { font-size: 1rem; font-weight: 700; color: #066931; }
+                    .historial-specialty { font-size: 0.85rem; color: #718096; }
+                    .historial-body { }
+                    .historial-diagnosis { background: #f7fafc; padding: 12px; border-radius: 8px; margin: 8px 0; }
+                    .historial-diagnosis label { display: block; font-size: 0.7rem; color: #718096; text-transform: uppercase; font-weight: bold; margin-bottom: 3px; }
+                    .historial-diagnosis p { margin: 0; font-size: 0.95rem; color: #2d3748; }
+                    .historial-detail { display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.85rem; color: #718096; margin-top: 8px; padding-top: 8px; border-top: 1px solid #edf2f7; }
+                    .historial-detail span { }
+                    .historial-detail strong { color: #2d3748; }
+                    .no-historial { text-align: center; padding: 50px; background: white; border: 2px dashed #e2e8f0; border-radius: 12px; color: #718096; }
+                    .no-historial svg { margin-bottom: 10px; }
+                </style>
+                <div class="historial-container">
+                    <h2 class="section-title">Mi Historial de Atenciones</h2>
+                    <p style="color:#718096;margin-bottom:25px;">Registro completo de todas sus atenciones médicas</p>
+                    <?php if (!empty($historialAtenciones)): ?>
+                        <?php foreach ($historialAtenciones as $h): ?>
+                            <div class="historial-card">
+                                <div class="historial-header">
+                                    <div class="historial-date"><?= date('d/m/Y', strtotime($h['fecha_hora_atencion'])) ?></div>
+                                    <span class="historial-specialty"><?= htmlspecialchars($h['nombre_especialidad']) ?></span>
+                                </div>
+                                <div class="historial-body">
+                                    <div class="historial-diagnosis">
+                                        <label>Diagnóstico (<?= htmlspecialchars($h['tipo_diagnostico']) ?>)</label>
+                                        <p><?= htmlspecialchars($h['descripcion_diagnostico']) ?></p>
+                                    </div>
+                                    <?php if ($h['tratamiento_prescrito']): ?>
+                                        <div class="historial-diagnosis" style="background:#fef3c7;">
+                                            <label>Tratamiento prescrito</label>
+                                            <p><?= htmlspecialchars($h['tratamiento_prescrito']) ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="historial-detail">
+                                        <span><strong>Médico:</strong> Dr. <?= htmlspecialchars($h['medico_nombre'] . ' ' . $h['medico_apellido']) ?></span>
+                                        <span><strong>Ticket:</strong> <?= htmlspecialchars($h['codigo_ticket']) ?></span>
+                                        <span><strong>Consultorio:</strong> N° <?= htmlspecialchars($h['numero_consultorio']) ?></span>
+                                        <?php if ($h['fecha_proxima_cita']): ?>
+                                            <span><strong>Próxima cita:</strong> <?= date('d/m/Y', strtotime($h['fecha_proxima_cita'])) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="no-historial">
+                            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            <p style="margin:5px 0;">No tiene atenciones médicas registradas aún.</p>
+                            <a href="?route=solicitar_turno" style="color:#066931;font-weight:600;">Solicitar un turno</a>
+                        </div>
+                    <?php endif; ?>
+                </div>
             <?php else: ?>
                 <h2 class="section-title">Bienvenido, <?= htmlspecialchars($user['nombre']) ?></h2>
                 <p style="color:#718096;">Seleccione una opción del menú lateral</p>
@@ -655,6 +724,10 @@ $pageTitle = "Dashboard Paciente - Q-Line";
         <a href="?route=dashboard_paciente&section=citas" class="mobile-nav-item <?= $activeSection === 'citas' ? 'active' : '' ?>">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             Mis Citas
+        </a>
+        <a href="?route=dashboard_paciente&section=historial" class="mobile-nav-item <?= $activeSection === 'historial' ? 'active' : '' ?>">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Mi Historial
         </a>
         <a href="?route=dashboard_paciente&section=perfil" class="mobile-nav-item <?= $activeSection === 'perfil' ? 'active' : '' ?>">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -761,6 +834,33 @@ $pageTitle = "Dashboard Paciente - Q-Line";
                 <div class="mobile-card">
                     <h3>Sin citas programadas</h3>
                     <p>No tiene citas de seguimiento próximas</p>
+                </div>
+            <?php endif; ?>
+        <?php elseif ($activeSection === 'historial'): ?>
+            <h2 class="mobile-title">Mi Historial de Atenciones</h2>
+            <?php if (!empty($historialAtenciones)): ?>
+                <?php foreach ($historialAtenciones as $h): ?>
+                    <div class="mobile-card">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                            <strong style="color:#066931;"><?= date('d/m/Y', strtotime($h['fecha_hora_atencion'])) ?></strong>
+                            <small style="color:#718096;"><?= htmlspecialchars($h['nombre_especialidad']) ?></small>
+                        </div>
+                        <div style="background:#f7fafc;padding:8px;border-radius:6px;margin:6px 0;">
+                            <p style="margin:0;font-size:0.85rem;"><strong>Diagnóstico:</strong> <?= htmlspecialchars($h['descripcion_diagnostico']) ?></p>
+                        </div>
+                        <?php if ($h['tratamiento_prescrito']): ?>
+                            <p style="margin:4px 0;font-size:0.8rem;"><strong>Tratamiento:</strong> <?= htmlspecialchars($h['tratamiento_prescrito']) ?></p>
+                        <?php endif; ?>
+                        <p style="margin:4px 0 0;font-size:0.75rem;color:#718096;">Dr. <?= htmlspecialchars($h['medico_nombre'] . ' ' . $h['medico_apellido']) ?> · <?= htmlspecialchars($h['codigo_ticket']) ?> · Cons. <?= htmlspecialchars($h['numero_consultorio']) ?></p>
+                        <?php if ($h['fecha_proxima_cita']): ?>
+                            <p style="margin:4px 0 0;font-size:0.75rem;color:#d97706;">Próxima cita: <?= date('d/m/Y', strtotime($h['fecha_proxima_cita'])) ?></p>
+                        <?php endif; ?>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="mobile-card">
+                    <h3>Sin atenciones registradas</h3>
+                    <p>No tiene atenciones médicas previas registradas</p>
                 </div>
             <?php endif; ?>
         <?php elseif ($activeSection === 'perfil'): ?>

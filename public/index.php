@@ -47,6 +47,25 @@ if ($route === 'api') {
     exit;
 }
 
+if ($route === 'api_monitor') {
+    header('Content-Type: application/json');
+    ob_end_clean();
+    require_once LOGIC_PATH . '/Models/Ticket.php';
+
+    $especialidad = intval($_GET['especialidad'] ?? 0);
+    $data = Ticket::listarMonitor();
+
+    echo json_encode([
+        'success' => true,
+        'llamados' => $data['llamados'],
+        'atendidos' => $data['atendidos'],
+        'espera_por_especialidad' => $data['espera_por_especialidad'],
+        'total_espera' => $data['total_espera'],
+        'timestamp' => $data['timestamp']
+    ]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' || $route === 'logout') {
     require_once LOGIC_PATH . '/Controllers/AuthController.php';
     
@@ -294,6 +313,11 @@ $routes = [
         'view' => 'views/forgot_password.php',
         'css' => 'register.css'
     ],
+    'monitor' => [
+        'title' => 'Monitor - Sala de Espera Q-Line',
+        'view' => 'views/monitor.php',
+        'css' => 'monitor.css'
+    ],
     'privacy' => [
         'title' => 'Política de Privacidad - Q-Line',
         'view' => 'views/privacy.php',
@@ -432,6 +456,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'llamar_siguiente' && $_SERVER
 
     ob_end_clean();
     echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=?route=dashboard_medico&section=tickets"></head></html>';
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'update_limite' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_once LOGIC_PATH . '/Controllers/AuthController.php';
+    require_once LOGIC_PATH . '/Controllers/MedicoController.php';
+
+    $auth = new AuthController();
+    $user = $auth->getUser();
+
+    if ($user && $user['rol'] == 2) {
+        $medicoCtrl = new MedicoController($user['id_persona']);
+        $limite = intval($_POST['limite_diario'] ?? 0);
+        $result = $medicoCtrl->actualizarLimiteDiario($limite);
+        $_SESSION['message'] = $result['message'];
+        $_SESSION['messageType'] = $result['success'] ? 'success' : 'error';
+    }
+
+    ob_end_clean();
+    echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=?route=dashboard_medico&section=perfil"></head></html>';
     exit;
 }
 

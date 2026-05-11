@@ -8,6 +8,20 @@ class UserController {
         return Usuario::listarTodos($limit, $offset);
     }
 
+    public function buscarUsuarios($search, $limit = 0, $offset = 0) {
+        if (empty(trim($search))) {
+            return Usuario::listarTodos($limit, $offset);
+        }
+        return Usuario::buscarUsuarios($search, $limit, $offset);
+    }
+
+    public function contarUsuariosBusqueda($search) {
+        if (empty(trim($search))) {
+            return Usuario::contarTodos();
+        }
+        return Usuario::contarUsuariosBusqueda($search);
+    }
+
     public function contarUsuarios() {
         return Usuario::contarTodos();
     }
@@ -61,6 +75,16 @@ class UserController {
         $pac = Paciente::buscarPorIdUsuario($id_usuario);
         if ($pac) {
             return Atencion::listarProximasCitas($pac['id_paciente']);
+        }
+        return [];
+    }
+
+    public function listarHistorialAtenciones($id_usuario) {
+        require_once dirname(__DIR__) . '/Models/Atencion.php';
+        require_once dirname(__DIR__) . '/Models/Paciente.php';
+        $pac = Paciente::buscarPorIdUsuario($id_usuario);
+        if ($pac) {
+            return Atencion::listarHistorialCompleto($pac['id_paciente']);
         }
         return [];
     }

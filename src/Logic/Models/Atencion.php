@@ -48,6 +48,44 @@ class Atencion {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public static function listarHistorialCompleto($id_paciente) {
+        $conn = Database::getConnection();
+        $query = "SELECT a.*, t.codigo_ticket, t.fecha_creacion,
+                         c.numero_consultorio, c.piso,
+                         e.nombre_especialidad,
+                         per.nombre as medico_nombre, per.apellido as medico_apellido
+                  FROM atencion a
+                  INNER JOIN ticket t ON a.id_ticket = t.id_ticket
+                  INNER JOIN consultorio c ON t.id_consultorio = c.id_consultorio
+                  INNER JOIN especialidad e ON c.id_especialidad = e.id_especialidad
+                  INNER JOIN personal m ON a.id_personal = m.id_personal
+                  INNER JOIN persona per ON m.id_persona = per.id_persona
+                  WHERE t.id_paciente = ?
+                  ORDER BY a.fecha_hora_atencion DESC";
+        $stmt = $conn->prepare($query);
+        $stmt->execute([$id_paciente]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function listarPorPersonal($id_personal) {
+        $conn = Database::getConnection();
+        $query = "SELECT t.id_paciente, 
+                         per.nombre as paciente_nombre, per.apellido as paciente_apellido,
+                         per.documento, per.telefono,
+                         MAX(a.fecha_hora_atencion) as ultima_atencion,
+                         COUNT(a.id_atencion) as total_atenciones
+                  FROM atencion a
+                  INNER JOIN ticket t ON a.id_ticket = t.id_ticket
+                  INNER JOIN paciente p ON t.id_paciente = p.id_paciente
+                  INNER JOIN persona per ON p.id_persona = per.id_persona
+                  WHERE a.id_personal = ?
+                  GROUP BY t.id_paciente, per.nombre, per.apellido, per.documento, per.telefono
+                  ORDER BY ultima_atencion DESC";
+        $stmt = $conn->prepare($query);
+        $stmt->execute([$id_personal]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function listarProximasCitas($id_paciente) {
         $conn = Database::getConnection();
         $query = "SELECT a.fecha_proxima_cita, a.tipo_diagnostico, a.descripcion_diagnostico, 
@@ -65,6 +103,26 @@ class Atencion {
                   ORDER BY a.fecha_proxima_cita ASC";
         $stmt = $conn->prepare($query);
         $stmt->execute([$id_paciente]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function listarAtencionesPorPersonalYFecha($id_personal, $fecha) {
+        $conn = Database::getConnection();
+        $query = "SELECT a.*, t.codigo_ticket, t.prioridad,
+                         c.numero_consultorio, c.piso,
+                         e.nombre_especialidad,
+                         per.nombre as paciente_nombre, per.apellido as paciente_apellido,
+                         per.documento, per.telefono
+                  FROM atencion a
+                  INNER JOIN ticket t ON a.id_ticket = t.id_ticket
+                  INNER JOIN consultorio c ON t.id_consultorio = c.id_consultorio
+                  INNER JOIN especialidad e ON c.id_especialidad = e.id_especialidad
+                  INNER JOIN paciente p ON t.id_paciente = p.id_paciente
+                  INNER JOIN persona per ON p.id_persona = per.id_persona
+                  WHERE a.id_personal = ? AND DATE(a.fecha_hora_atencion) = ?
+                  ORDER BY a.fecha_hora_atencion ASC";
+        $stmt = $conn->prepare($query);
+        $stmt->execute([$id_personal, $fecha]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 

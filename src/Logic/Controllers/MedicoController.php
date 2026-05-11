@@ -37,9 +37,40 @@ class MedicoController {
         return Ticket::listarEnEspera($this->getIdsConsultorios());
     }
 
+    public function verificarLimiteDiario() {
+        if (!$this->id_personal) return false;
+        $personal = Personal::buscarPorId($this->id_personal);
+        if (!$personal || intval($personal['limite_diario']) <= 0) return true;
+        $atendidos = Personal::contarAtendidosHoy($this->id_personal);
+        return $atendidos < intval($personal['limite_diario']);
+    }
+
+    public function getLimiteDiario() {
+        if (!$this->id_personal) return ['limite' => 0, 'atendidos' => 0, 'restantes' => 0];
+        $personal = Personal::buscarPorId($this->id_personal);
+        $limite = intval($personal['limite_diario'] ?? 0);
+        $atendidos = Personal::contarAtendidosHoy($this->id_personal);
+        $restantes = $limite > 0 ? max(0, $limite - $atendidos) : -1;
+        return ['limite' => $limite, 'atendidos' => $atendidos, 'restantes' => $restantes];
+    }
+
+    public function actualizarLimiteDiario($limite) {
+        if (!$this->id_personal) {
+            return ['success' => false, 'message' => 'Médico no encontrado'];
+        }
+        if (Personal::actualizarLimiteDiario($this->id_personal, $limite)) {
+            return ['success' => true, 'message' => 'Límite diario actualizado'];
+        }
+        return ['success' => false, 'message' => 'Error al actualizar límite'];
+    }
+
     public function llamarSiguiente() {
         if (!$this->id_personal) {
             return ['success' => false, 'message' => 'Médico no encontrado'];
+        }
+
+        if (!$this->verificarLimiteDiario()) {
+            return ['success' => false, 'message' => 'Has alcanzado el límite diario de atenciones'];
         }
 
         $id_ticket = Ticket::llamarSiguiente($this->getIdsConsultorios());
@@ -59,6 +90,20 @@ class MedicoController {
         $ticket = Ticket::obtenerPorId($id_ticket);
         if (!$ticket) return [];
         return Atencion::listarHistorial($ticket['id_paciente']);
+    }
+
+    public function obtenerHistorialCompleto($id_paciente) {
+        return Atencion::listarHistorialCompleto($id_paciente);
+    }
+
+    public function buscarPacientes($search) {
+        if (empty(trim($search))) return [];
+        return Paciente::buscarPacientes($search);
+    }
+
+    public function listarPacientesAtendidos() {
+        if (!$this->id_personal) return [];
+        return Atencion::listarPorPersonal($this->id_personal);
     }
 
     public function iniciarAtencion($id_ticket, $tipo_diagnostico, $descripcion_diagnostico, $tratamiento_prescrito, $fecha_proxima_cita = null) {
@@ -86,6 +131,11 @@ class MedicoController {
             return ['success' => true, 'message' => 'Atención finalizada'];
         }
         return ['success' => false, 'message' => 'Atención no encontrada'];
+    }
+
+    public function obtenerReporteDiario($fecha) {
+        if (!$this->id_personal) return [];
+        return Atencion::listarAtencionesPorPersonalYFecha($this->id_personal, $fecha);
     }
 
     public function calcularMM1() {
