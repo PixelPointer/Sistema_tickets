@@ -2,6 +2,7 @@
 require_once dirname(__DIR__) . '/Models/Especialidad.php';
 require_once dirname(__DIR__) . '/Models/Consultorio.php';
 
+// Controlador de Especialidades y Consultorios - CRUD administrable
 class EspecialidadController {
 
     public function listEspecialidades() {
@@ -16,6 +17,7 @@ class EspecialidadController {
         return Consultorio::listarPorEspecialidad($id_especialidad);
     }
 
+    // Crear nueva especialidad médica
     public function crearEspecialidad($nombre) {
         if (empty($nombre)) {
             return ['success' => false, 'message' => 'El nombre de la especialidad es requerido'];
@@ -33,6 +35,7 @@ class EspecialidadController {
         return ['success' => false, 'message' => 'Error al eliminar'];
     }
 
+    // Crear consultorio vinculado a una especialidad
     public function crearConsultorio($id_especialidad, $numero, $piso = '') {
         if (empty($id_especialidad) || empty($numero)) {
             return ['success' => false, 'message' => 'Seleccione especialidad e ingrese número'];

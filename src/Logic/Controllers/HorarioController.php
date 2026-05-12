@@ -2,6 +2,7 @@
 require_once dirname(__DIR__) . '/Models/Horario.php';
 require_once dirname(__DIR__) . '/Models/Personal.php';
 
+// Controlador de Horarios - CRUD y asignación de horarios a médicos
 class HorarioController {
 
     public function listarHorarios() {
@@ -12,10 +13,12 @@ class HorarioController {
         return Horario::personalConHorarios();
     }
 
+    // Obtener horarios asignados a un médico específico
     public function horariosPorPersonal($id_personal) {
         return Horario::listarPorPersonal($id_personal);
     }
 
+    // Crear nuevo horario con validación de hora inicio < hora fin
     public function crearHorario($dia_semana, $hora_inicio, $hora_fin) {
         if (empty($dia_semana) || empty($hora_inicio) || empty($hora_fin)) {
             return ['success' => false, 'message' => 'Todos los campos son requeridos'];
@@ -36,6 +39,7 @@ class HorarioController {
         return ['success' => false, 'message' => 'Error al eliminar'];
     }
 
+    // Asignar horario a un médico (evita duplicados)
     public function asignarHorario($id_personal, $id_horario) {
         if (empty($id_personal) || empty($id_horario)) {
             return ['success' => false, 'message' => 'Seleccione personal y horario'];

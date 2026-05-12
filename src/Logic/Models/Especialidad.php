@@ -1,6 +1,9 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// RF 5: Modelo de Especialidad Médica
+// Cada especialidad define un área médica y se usa para generar códigos de ticket
+// y organizar consultorios, médicos y horarios
 class Especialidad {
     
     public static function listarTodos() {

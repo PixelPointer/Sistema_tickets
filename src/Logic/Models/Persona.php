@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// Modelo base de Persona - datos personales compartidos por todos los roles
+// Almacena información común: nombre, documento, contacto, dirección, fecha nacimiento
 class Persona {
     private $conn;
     private $table_name = "persona";
@@ -18,6 +20,7 @@ class Persona {
         $this->conn = Database::getConnection();
     }
 
+    // Crear una nueva persona en BD
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
                   (nombre, apellido, documento, telefono, direccion, fecha_nacimiento, email) 
@@ -40,6 +43,7 @@ class Persona {
         return false;
     }
 
+    // Actualizar datos de persona existente
     public function actualizar() {
         $query = "UPDATE " . $this->table_name . " 
                   SET nombre = :nombre, apellido = :apellido, documento = :documento, 
@@ -61,6 +65,7 @@ class Persona {
         return $stmt->execute();
     }
 
+    // Buscar persona por número de documento (validación de unicidad)
     public static function buscarPorDocumento($documento) {
         $conn = Database::getConnection();
         $query = "SELECT * FROM persona WHERE documento = :documento";
@@ -70,6 +75,7 @@ class Persona {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Buscar persona por email (validación de unicidad y login)
     public static function buscarPorEmail($email) {
         $conn = Database::getConnection();
         $query = "SELECT * FROM persona WHERE email = :email";

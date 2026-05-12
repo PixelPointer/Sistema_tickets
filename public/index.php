@@ -1,4 +1,6 @@
 <?php
+// Front Controller - Punto de entrada único
+// Arquitectura 3-capas: Presentación (views), Lógica (Controllers/Models), Datos (config/database)
 date_default_timezone_set('America/La_Paz');
 ob_start();
 session_start();
@@ -14,6 +16,7 @@ $route = $_GET['route'] ?? 'landing';
 $message = '';
 $messageType = '';
 
+// RF 19: API endpoint para polling - estado del ticket
 if ($route === 'api') {
     header('Content-Type: application/json');
     ob_end_clean();
@@ -47,6 +50,7 @@ if ($route === 'api') {
     exit;
 }
 
+// RFC 20: API endpoint para monitor público (5s polling)
 if ($route === 'api_monitor') {
     header('Content-Type: application/json');
     ob_end_clean();
@@ -66,17 +70,20 @@ if ($route === 'api_monitor') {
     exit;
 }
 
+// Procesamiento de formularios POST y acciones administrativas
 if ($_SERVER['REQUEST_METHOD'] === 'POST' || $route === 'logout') {
     require_once LOGIC_PATH . '/Controllers/AuthController.php';
     
     $auth = new AuthController();
 
+    // RF 3: Cerrar sesión
     if ($route === 'logout') {
         $auth->logout();
         header('Location: ?route=landing');
         exit;
     }
 
+    // RF 2: Registro de nuevo paciente
     if ($route === 'register') {
         $data = [
             'nombre' => $_POST['nombre'] ?? '',
@@ -103,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $route === 'logout') {
         }
     }
 
+    // RF 1: Inicio de sesión con redirect según rol
     if ($route === 'login') {
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
@@ -127,6 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' || $route === 'logout') {
         }
     }
 
+    // Acciones administrativas (CRUD: usuarios, especialidades, consultorios, personal, horarios)
     if (isset($_GET['action']) && $_GET['action'] === 'update_role' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once LOGIC_PATH . '/Controllers/UserController.php';
         

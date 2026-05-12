@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// Modelo de Consultorio - representa un consultorio físico vinculado a una especialidad
+// Cada ticket se asigna a un consultorio específico
 class Consultorio {
     
     public static function listarTodos() {

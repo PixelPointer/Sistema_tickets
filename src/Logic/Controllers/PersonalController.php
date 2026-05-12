@@ -2,6 +2,7 @@
 require_once dirname(__DIR__) . '/Models/Personal.php';
 require_once dirname(__DIR__) . '/Models/Usuario.php';
 
+// Controlador de Personal Médico - CRUD de médicos en el sistema
 class PersonalController {
 
     public function listPersonal($limit = 0, $offset = 0) {
@@ -12,6 +13,7 @@ class PersonalController {
         return Personal::contarTodos();
     }
 
+    // Buscar registro de personal por ID de persona
     public function getPersonalByPersonaId($id_persona) {
         $lista = Personal::listarTodos();
         foreach ($lista as $p) {
@@ -22,6 +24,7 @@ class PersonalController {
         return null;
     }
 
+    // Listar usuarios con rol médico que aún no están registrados en personal
     public function listMedicosSinPersonal() {
         $conn = Database::getConnection();
         $query = "SELECT u.id_usuario, u.id_persona, per.nombre, per.apellido, per.documento
@@ -34,6 +37,7 @@ class PersonalController {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Agregar médico a personal con especialidad y matrícula
     public function crearPersonal($id_persona, $id_especialidad, $matricula) {
         if (empty($id_persona) || empty($id_especialidad) || empty($matricula)) {
             return ['success' => false, 'message' => 'Todos los campos son requeridos'];

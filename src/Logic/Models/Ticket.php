@@ -21,6 +21,7 @@ class Ticket {
         $this->conn = Database::getConnection();
     }
 
+    // RF 4: Crear ticket en BD con estado 'Espera'
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
                   (id_paciente, id_consultorio, codigo_ticket, prioridad, estado, tiempo_estimado_espera, motivo_consulta) 
@@ -42,9 +43,12 @@ class Ticket {
         return false;
     }
 
+    // RF 5: Generar código único por especialidad con reinicio diario
+    // Formato: MED-001 (3 letras de especialidad + secuencia diaria)
     public static function generarCodigo($id_especialidad) {
         $conn = Database::getConnection();
 
+        // Obtener abreviatura de 3 letras desde el nombre de la especialidad
         $stmt = $conn->prepare("SELECT nombre_especialidad FROM especialidad WHERE id_especialidad = ?");
         $stmt->execute([$id_especialidad]);
         $esp = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -59,6 +63,7 @@ class Ticket {
             $abbr = substr($abbr, 0, 3);
         }
 
+        // Contar tickets de HOY para esta especialidad (reinicio diario)
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket t 
                                 INNER JOIN consultorio c ON t.id_consultorio = c.id_consultorio
                                 WHERE DATE(t.fecha_creacion) = CURDATE() AND c.id_especialidad = ?");
@@ -69,6 +74,7 @@ class Ticket {
         return $abbr . '-' . $seq;
     }
 
+    // RF 6: Contar personas antes en la cola para el mismo consultorio
     public static function contarAntes($id_consultorio, $id_ticket) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket 
@@ -77,6 +83,7 @@ class Ticket {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
+    // RF 8: Verificar si el paciente ya tiene ticket activo hoy (límite 1/día)
     public static function tieneTicketHoy($id_paciente) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket 
@@ -86,6 +93,7 @@ class Ticket {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'] > 0;
     }
 
+    // Obtener ticket completo con datos relacionados
     public static function obtenerPorId($id_ticket) {
         $conn = Database::getConnection();
         $query = "SELECT t.*, c.numero_consultorio, c.piso, e.nombre_especialidad,
@@ -101,6 +109,7 @@ class Ticket {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // RF 16: Estimar tiempo de espera (10 min × personas en espera)
     public static function estimarTiempoEspera($id_consultorio) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket 
@@ -110,6 +119,7 @@ class Ticket {
         return $cantidad * 10;
     }
 
+    // Listar tickets de un paciente (historial)
     public static function listarPorPaciente($id_paciente) {
         $conn = Database::getConnection();
         $query = "SELECT t.*, c.numero_consultorio, c.piso, e.nombre_especialidad,
@@ -126,6 +136,7 @@ class Ticket {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Contar tickets activos de un paciente hoy
     public static function contarActivosHoy($id_paciente) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket 
@@ -135,6 +146,7 @@ class Ticket {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
+    // RF 17: Contar tickets del día
     public static function contarHoy() {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket WHERE DATE(fecha_creacion) = CURDATE()");
@@ -142,6 +154,7 @@ class Ticket {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
+    // Contar tickets por estado (para estadísticas)
     public static function contarPorEstado($estado) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM ticket WHERE estado = ? AND DATE(fecha_creacion) = CURDATE()");
@@ -149,6 +162,7 @@ class Ticket {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
+    // RF 7: Cancelar ticket (solo si está en 'Espera')
     public static function cancelar($id_ticket, $id_paciente) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT * FROM ticket WHERE id_ticket = ? AND id_paciente = ? AND estado = 'Espera'");
@@ -163,6 +177,7 @@ class Ticket {
         return $stmt->execute([$id_ticket]);
     }
 
+    // RF 17: Listar todos los tickets (admin)
     public static function listarTodos($filtro_estado = '', $limit = 200, $offset = 0) {
         $conn = Database::getConnection();
         $query = "SELECT t.*, c.numero_consultorio, c.piso, e.nombre_especialidad,
@@ -185,6 +200,7 @@ class Ticket {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Contar total de tickets (admin)
     public static function contarTodos($filtro_estado = '') {
         $conn = Database::getConnection();
         $query = "SELECT COUNT(*) as total FROM ticket t";
@@ -199,6 +215,8 @@ class Ticket {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
+    // RF 9: Listar tickets en espera llamados para el médico
+    // Orden: Llamado primero, luego Espera; por prioridad DESC, luego FIFO
     public static function listarEnEspera($id_consultorios) {
         $conn = Database::getConnection();
         if (empty($id_consultorios)) return [];
@@ -220,6 +238,7 @@ class Ticket {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // RF 10: Llamar siguiente paciente (el más prioritario + más antiguo en Espera)
     public static function llamarSiguiente($id_consultorios) {
         $conn = Database::getConnection();
         if (empty($id_consultorios)) return null;
@@ -233,18 +252,21 @@ class Ticket {
 
         if (!$ticket) return null;
 
+        // RF 11: Cambiar estado a 'Llamado' y registrar hora
         $stmt = $conn->prepare("UPDATE ticket SET estado = 'Llamado', hora_inicio_estimada = CURTIME() WHERE id_ticket = ?");
         $stmt->execute([$ticket['id_ticket']]);
 
         return $ticket['id_ticket'];
     }
 
+    // RF 11: Cambiar estado del ticket
     public static function cambiarEstado($id_ticket, $estado) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("UPDATE ticket SET estado = ? WHERE id_ticket = ?");
         return $stmt->execute([$estado, $id_ticket]);
     }
 
+    // Monitor sala de espera: tickets llamados, atendidos recientes, espera por especialidad
     public static function listarMonitor() {
         $conn = Database::getConnection();
 
@@ -292,9 +314,30 @@ class Ticket {
         ];
     }
 
+    /*
+     * MODELO M/M/1 - TEORÍA DE COLAS (RF 16 - Tiempo estimado de espera avanzado)
+     *
+     * Implementa el modelo matemático M/M/1 para analizar la cola de pacientes:
+     *
+     * Variables:
+     *   λ (lambda) = Tasa de llegada (pacientes/hora) - calculada de los últimos 7 días
+     *   μ (mu)     = Tasa de servicio (pacientes/hora) - basada en duración promedio de atenciones
+     *
+     * Fórmulas:
+     *   ρ = λ / μ                     Factor de utilización del sistema
+     *   Lq = λ² / (μ(μ - λ))         Número promedio de pacientes en cola
+     *   Wq = Lq / λ                   Tiempo promedio de espera en cola (horas)
+     *   W  = 1 / (μ - λ)             Tiempo total en sistema (horas)
+     *
+     * Interpretación:
+     *   ρ < 1  → Sistema estable
+     *   ρ = 1  → Sistema al límite
+     *   ρ > 1  → Sistema inestable, cola crece indefinidamente
+     */
     public static function calcularMM1($id_especialidad) {
         $conn = Database::getConnection();
 
+        // Calcular λ: promedio de llegadas por hora en los últimos 7 días
         $stmt = $conn->prepare("SELECT COUNT(*) as total, 
                                        TIMESTAMPDIFF(HOUR, MIN(fecha_creacion), MAX(fecha_creacion)) + 1 as horas
                                 FROM ticket 
@@ -303,11 +346,12 @@ class Ticket {
         $stmt->execute([$id_especialidad]);
         $llegadas = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $lambda = 4;
+        $lambda = 4; // Valor por defecto si no hay datos
         if ($llegadas && $llegadas['horas'] > 0) {
             $lambda = round($llegadas['total'] / max($llegadas['horas'], 1), 2);
         }
 
+        // Calcular μ: duración promedio de atención
         $stmt = $conn->prepare("SELECT AVG(TIMESTAMPDIFF(MINUTE, hora_inicio_real, hora_fin_real)) as duracion_promedio
                                 FROM atencion a
                                 INNER JOIN ticket t ON a.id_ticket = t.id_ticket
@@ -316,12 +360,13 @@ class Ticket {
         $stmt->execute([$id_especialidad]);
         $servicio = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $mu = 6;
+        $mu = 6; // Valor por defecto si no hay datos
         if ($servicio && $servicio['duracion_promedio'] > 0) {
             $minutos = floatval($servicio['duracion_promedio']);
             $mu = round(60 / max($minutos, 1), 2);
         }
 
+        // Calcular métricas M/M/1
         $rho = $mu > 0 ? round($lambda / $mu, 4) : 0;
         $Lq = 0;
         $Wq = 0;
@@ -340,8 +385,8 @@ class Ticket {
             'Lq' => $Lq,
             'Wq' => $Wq,
             'W' => $W,
-            'Wq_min' => round($Wq * 60),
-            'W_min' => round($W * 60)
+            'Wq_min' => round($Wq * 60), // Wq convertido a minutos
+            'W_min' => round($W * 60)    // W convertido a minutos
         ];
     }
 }

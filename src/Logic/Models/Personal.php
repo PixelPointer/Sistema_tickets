@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// RF 9: Modelo de Personal Médico
+// Gestiona médicos, su especialidad, matrícula y límite diario de atenciones
 class Personal {
 
     public static function contarTodos() {
@@ -48,6 +50,7 @@ class Personal {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Crear médico con límite diario opcional (0 = sin límite)
     public static function crear($id_persona, $id_especialidad, $matricula, $limite_diario = 0) {
         $conn = Database::getConnection();
         $query = "INSERT INTO personal (id_persona, id_especialidad, matricula_profesional, limite_diario) 
@@ -60,12 +63,14 @@ class Personal {
         return $stmt->execute();
     }
 
+    // RF 8: Actualizar límite diario de atenciones del médico
     public static function actualizarLimiteDiario($id_personal, $limite) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("UPDATE personal SET limite_diario = ? WHERE id_personal = ?");
         return $stmt->execute([intval($limite), intval($id_personal)]);
     }
 
+    // RF 8: Contar atenciones realizadas por el médico hoy
     public static function contarAtendidosHoy($id_personal) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM atencion 

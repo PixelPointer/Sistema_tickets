@@ -4,8 +4,13 @@ require_once dirname(__DIR__) . '/Models/Persona.php';
 require_once dirname(__DIR__) . '/Models/Usuario.php';
 require_once dirname(__DIR__) . '/Models/Paciente.php';
 
+// RF 1-2-3: Controlador de Autenticación
+// Maneja registro, inicio de sesión, cierre de sesión, persistencia con cookie
+// y restauración de sesión desde cookie "Recordarme"
 class AuthController {
 
+    // RF 2: Registrar nuevo paciente (rol=3) con validaciones
+    // Crea: Persona → Usuario → Paciente en ese orden
     public function register($data) {
         $errors = [];
         if (empty($data['nombre'])) $errors[] = 'El nombre es requerido';
@@ -110,6 +115,9 @@ class AuthController {
         ];
     }
 
+    // RF 1: Iniciar sesión - verifica credenciales, inicia sesión, redirige según rol
+    // Roles: 1=Admin→dashboard_admin, 2=Médico→dashboard_medico, 3=Paciente→dashboard_paciente
+    // Soporta "Recordarme" con cookie firmada (hash SHA-256)
     public function login($email, $password) {
         $usuario = new Usuario();
         $resultado = $usuario->verificarLogin($email, $password);
@@ -155,6 +163,7 @@ class AuthController {
         ];
     }
 
+    // RF 3: Cerrar sesión - destruye sesión y elimina cookie de recordarme
     public function logout() {
         session_start();
         session_destroy();
@@ -167,6 +176,7 @@ class AuthController {
         ];
     }
 
+    // Restaurar sesión desde cookie "Recordarme" (usado al inicio de index.php)
     public static function restoreFromCookie() {
         if (isset($_COOKIE['remember_token']) && !isset($_SESSION['id_usuario'])) {
             $parts = explode(':', $_COOKIE['remember_token'], 2);
@@ -204,6 +214,7 @@ class AuthController {
         return isset($_SESSION['id_usuario']);
     }
 
+    // Obtener datos del usuario autenticado desde la sesión
     public function getUser() {
         session_start();
         if (isset($_SESSION['id_usuario'])) {

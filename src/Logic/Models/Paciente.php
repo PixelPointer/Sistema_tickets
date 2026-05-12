@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// RF 2: Modelo de Paciente - extiende datos de persona con información médica
+// Almacena datos específicos del paciente (grupo sanguíneo, seguro)
 class Paciente {
     private $conn;
     private $table_name = "paciente";
@@ -14,6 +16,7 @@ class Paciente {
         $this->conn = Database::getConnection();
     }
 
+    // Crear registro de paciente vinculado a una persona existente
     public function crear() {
         $query = "INSERT INTO " . $this->table_name . " 
                   (id_persona, grupo_sanguineo, num_seguro) 
@@ -40,6 +43,7 @@ class Paciente {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Buscar paciente con datos personales completos por ID de paciente
     public static function buscarPorId($id) {
         $conn = Database::getConnection();
         $query = "SELECT p.*, per.nombre, per.apellido, per.documento, per.telefono, per.direccion, per.fecha_nacimiento 
@@ -61,6 +65,7 @@ class Paciente {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Buscar paciente por ID de usuario (relación: usuario → persona → paciente)
     public static function buscarPorIdUsuario($id_usuario) {
         $conn = Database::getConnection();
         $query = "SELECT p.*, per.nombre, per.apellido, per.documento, per.telefono, per.direccion, per.fecha_nacimiento, per.email, u.nombre_usuario as nombre_usuario
@@ -74,6 +79,7 @@ class Paciente {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Buscar pacientes por nombre, apellido o documento (para historial médico)
     public static function buscarPacientes($search) {
         $conn = Database::getConnection();
         $query = "SELECT p.id_paciente, per.nombre, per.apellido, per.documento, per.telefono, per.fecha_nacimiento, per.email

@@ -1,6 +1,9 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// RF 21: Modelo de Horarios de Atención
+// Define días y horas disponibles por especialidad, y asigna horarios a médicos
+// Usado para verificar disponibilidad antes de permitir solicitar turno
 class Horario {
 
     public static function listarTodos() {
@@ -20,6 +23,7 @@ class Horario {
         return $stmt->execute([$dia_semana, $hora_inicio, $hora_fin]);
     }
 
+    // Eliminar horario (también limpia asignaciones en personal_horario)
     public static function eliminar($id) {
         $conn = Database::getConnection();
         $conn->prepare("DELETE FROM personal_horario WHERE id_horario = ?")->execute([$id]);
@@ -35,6 +39,7 @@ class Horario {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Listar horarios asignados a un médico específico
     public static function listarPorPersonal($id_personal) {
         $conn = Database::getConnection();
         $query = "SELECT h.* FROM horario h
@@ -46,6 +51,7 @@ class Horario {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Asignar horario a un médico (evita duplicados)
     public static function asignarAPersonal($id_personal, $id_horario) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM personal_horario WHERE id_personal = ? AND id_horario = ?");
@@ -57,12 +63,15 @@ class Horario {
         return $stmt->execute([$id_personal, $id_horario]);
     }
 
+    // Desasignar horario de un médico
     public static function desasignarDePersonal($id_personal, $id_horario) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("DELETE FROM personal_horario WHERE id_personal = ? AND id_horario = ?");
         return $stmt->execute([$id_personal, $id_horario]);
     }
 
+    // RF 21: Verificar si hay atención disponible hoy para una especialidad
+    // Compara día actual y hora actual contra horarios del médico de esa especialidad
     public static function verificarDisponibilidad($id_especialidad) {
         $conn = Database::getConnection();
         $dias = ['Sunday' => 'Domingo', 'Monday' => 'Lunes', 'Tuesday' => 'Martes', 
@@ -80,6 +89,7 @@ class Horario {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'] > 0;
     }
 
+    // Obtener horarios de una especialidad (para mostrar mensajes de error)
     public static function horariosParaEspecialidad($id_especialidad) {
         $conn = Database::getConnection();
         $query = "SELECT DISTINCT h.dia_semana, h.hora_inicio, h.hora_fin
@@ -93,6 +103,7 @@ class Horario {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Listar todo el personal médico (para asignación de horarios)
     public static function personalConHorarios() {
         $conn = Database::getConnection();
         $query = "SELECT p.id_personal, per.nombre, per.apellido, e.nombre_especialidad

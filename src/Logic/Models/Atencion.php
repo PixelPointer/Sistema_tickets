@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// RF 13: Modelo de Registro de Atenciones Médicas
+// Almacena diagnósticos, tratamientos, tiempos reales de atención y próximas citas
 class Atencion {
     private $conn;
 
@@ -8,6 +10,8 @@ class Atencion {
         $this->conn = Database::getConnection();
     }
 
+    // RF 11-14: Crear registro de atención cuando el médico atiende al paciente
+    // Guarda diagnóstico, tratamiento y hora_inicio_real, vincula ticket con personal
     public function crear($id_ticket, $id_personal, $tipo_diagnostico, $descripcion_diagnostico, $tratamiento_prescrito, $fecha_proxima_cita = null) {
         $query = "INSERT INTO atencion (id_ticket, id_personal, tipo_diagnostico, descripcion_diagnostico, tratamiento_prescrito, hora_inicio_real, fecha_proxima_cita) 
                   VALUES (?, ?, ?, ?, ?, CURTIME(), ?)";
@@ -15,12 +19,14 @@ class Atencion {
         return $stmt->execute([$id_ticket, $id_personal, $tipo_diagnostico, $descripcion_diagnostico, $tratamiento_prescrito, $fecha_proxima_cita]);
     }
 
+    // RF 11: Finalizar atención registrando hora_fin_real (usado en μ de M/M/1)
     public static function finalizar($id_atencion) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("UPDATE atencion SET hora_fin_real = CURTIME() WHERE id_atencion = ?");
         return $stmt->execute([$id_atencion]);
     }
 
+    // Buscar atención por ticket (usado para verificar si ya fue atendido)
     public static function buscarPorTicket($id_ticket) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT * FROM atencion WHERE id_ticket = ?");
@@ -28,6 +34,7 @@ class Atencion {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // RF 13: Historial resumido (últimas 10 atenciones) para vista del médico
     public static function listarHistorial($id_paciente) {
         $conn = Database::getConnection();
         $query = "SELECT a.*, t.codigo_ticket, t.fecha_creacion,
@@ -48,6 +55,7 @@ class Atencion {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // RF 13: Historial completo de atenciones del paciente (para vista detallada)
     public static function listarHistorialCompleto($id_paciente) {
         $conn = Database::getConnection();
         $query = "SELECT a.*, t.codigo_ticket, t.fecha_creacion,
@@ -67,6 +75,7 @@ class Atencion {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Listar pacientes atendidos por un médico (agrupado, con última atención)
     public static function listarPorPersonal($id_personal) {
         $conn = Database::getConnection();
         $query = "SELECT t.id_paciente, 
@@ -86,6 +95,7 @@ class Atencion {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // RF 15: Listar próximas citas programadas para un paciente
     public static function listarProximasCitas($id_paciente) {
         $conn = Database::getConnection();
         $query = "SELECT a.fecha_proxima_cita, a.tipo_diagnostico, a.descripcion_diagnostico, 
@@ -106,6 +116,7 @@ class Atencion {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // RF 18: Reporte diario de atenciones de un médico en una fecha específica
     public static function listarAtencionesPorPersonalYFecha($id_personal, $fecha) {
         $conn = Database::getConnection();
         $query = "SELECT a.*, t.codigo_ticket, t.prioridad,
@@ -126,6 +137,7 @@ class Atencion {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Actualizar datos de una atención existente
     public static function actualizar($id_atencion, $tipo_diagnostico, $descripcion_diagnostico, $tratamiento_prescrito, $fecha_proxima_cita = null) {
         $conn = Database::getConnection();
         $query = "UPDATE atencion SET tipo_diagnostico = ?, descripcion_diagnostico = ?, tratamiento_prescrito = ?, fecha_proxima_cita = ? WHERE id_atencion = ?";

@@ -1,6 +1,8 @@
 <?php
 require_once dirname(__DIR__, 3) . '/config/database.php';
 
+// RF 1: Modelo de Usuario - autenticación, roles y gestión de perfil
+// Soporta roles: 1=Admin, 2=Médico, 3=Paciente
 class Usuario {
     private $conn;
     private $table_name = "usuario";
@@ -16,6 +18,7 @@ class Usuario {
         $this->conn = Database::getConnection();
     }
 
+    // Crear usuario con contraseña hasheada usando bcrypt (PASSWORD_DEFAULT)
     public function crear() {
         try {
             $query = "INSERT INTO " . $this->table_name . " 
@@ -43,6 +46,7 @@ class Usuario {
         }
     }
 
+    // Buscar usuario por nombre de usuario (email)
     public function buscarPorUsuario($nombre_usuario) {
         $query = "SELECT * FROM " . $this->table_name . " WHERE nombre_usuario = :nombre_usuario";
         $stmt = $this->conn->prepare($query);
@@ -51,6 +55,7 @@ class Usuario {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // RF 1: Verificar credenciales al iniciar sesión
     public function verificarLogin($nombre_usuario, $contrasena) {
         $usuario = $this->buscarPorUsuario($nombre_usuario);
         
@@ -69,6 +74,7 @@ class Usuario {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    // Búsqueda de usuarios con filtro por nombre/apellido/usuario
     public static function buscarUsuarios($search, $limit = 0, $offset = 0) {
         $conn = Database::getConnection();
         $query = "SELECT u.id_usuario, u.nombre_usuario, u.estado, u.id_rol, 
@@ -123,6 +129,7 @@ class Usuario {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
+    // RF 17: Cambiar rol de usuario (admin)
     public static function actualizarRol($id_usuario, $id_rol) {
         $conn = Database::getConnection();
         $query = "UPDATE usuario SET id_rol = :id_rol WHERE id_usuario = :id_usuario";
@@ -140,6 +147,7 @@ class Usuario {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Actualizar nombre/apellido del perfil
     public static function actualizarPerfil($id_usuario, $nombre, $apellido) {
         $conn = Database::getConnection();
         $query = "UPDATE persona p 
@@ -153,6 +161,7 @@ class Usuario {
         return $stmt->execute();
     }
 
+    // Cambiar contraseña verificando la actual
     public static function cambiarPassword($id_usuario, $password_actual, $password_nueva) {
         $conn = Database::getConnection();
         
@@ -174,6 +183,7 @@ class Usuario {
         return $stmt->execute();
     }
 
+    // Contar usuarios por rol (para estadísticas del admin)
     public static function contarPorRol($id_rol) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT COUNT(*) as total FROM usuario WHERE id_rol = ?");
@@ -181,6 +191,7 @@ class Usuario {
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
 
+    // Actualizar todos los datos del paciente: persona + paciente + sesión
     public static function actualizarDatosCompletos($id_usuario, $data) {
         $conn = Database::getConnection();
         
